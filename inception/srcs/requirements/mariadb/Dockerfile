@@ -1,3 +1,5 @@
-FROM alpine:3.17
+FROM debian:buster
 
-RUN apt-get install -y mariadb-server
+RUN apt-get update && apt-get install -y mariadb-server
+
+EXPOSE 3306
