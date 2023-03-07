@@ -1,37 +1,63 @@
-version: '3'
+version: '3.9'
 
 services:
-  mysql:
-    image: mariadb
+  #Base de donnée
+  mariadb:
+    name: mariadb
+    build: ./requirements/mariadb
     volumes:
-      - /data/mysql:/var/lib/mysql
+      -mariadb_v:/var/lib/mysql
     environment:
-      MYSQL_ROOT_PASSWORD: mysql_root_pass
-      MYSQL_DATABASE: db_name
-      MYSQL_USER: user_name
-      MYSQL_PASSWORD: user_pass
+      - .env
+    network:
+      -inception
     restart: always
+
+  #Plateforme site web
   wordpress:
-    image: wordpress:php7.3-fpm-alpine
+    name: wordpress
+    build: ./requirements/wordpress
     volumes: 
-      - wordpress:/var/www/html
+      - wordpress_v:/var/www/html
     depends_on:
-      -mysql
+      -mariadb
     environment:
-      WORDPRESS_DB_HOST: mysql
-      MYSQL_ROOT_PASSWORD: mysql_root_pass
-      WORDPRESS_DB_NAME: db_name
-      WORDPRESS_DB_USER: user_name
-      WORDPRESS_DB_PASSWORD: user_pass
-      WORDPRESS_TABLE_PREFIX: wp_
-    link:
-      -mysql
+      - .env
+    network:
+      - inception
     restart: always
+
+  #Server Web. Utilise http pour afficher un site web
   nginx:
-    image: nginx:alpine
+    name: nginx
+    build: ./requirements/nginx
     volumes:
-      -nginx:/etc/nginx/conf.d
-      -/data/html:/var/www/html
+      - wordpress_v:/var/www/html
     ports:
-      - 8080:80
-    - wordpress
+      - 443:443
+    depends_on:
+      - wordpress
+    environment:
+      - .env
+    network:
+      - inception
+    restart: always
+
+networks:
+  inception:
+    driver: bridge #Default network driver. Connects the linked containers so they can communicate together. Aslo isolate them from other containers, not ont hat network.
+
+volumes:
+ mariadb_v:
+    driver: local 
+    driver_opts: #driver options
+      type: none
+      o: bind #mount option: bind mount est utilisé lorsque le docker est dépendant d'un répertoire de l'hôte, surtout utilisé s'il y a des fichiers de configuration. Pratique lorsque l'on doit modifier ou accéder un ou des fichiers
+      device: /home/anhebert/data/mariadb
+  wordpress_v:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind #mount option
+      device: /home/anhebert/data/wordpress
+
