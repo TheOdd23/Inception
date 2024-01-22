@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  mariadb:
+    container_name: "mariadb"
+    build: ./requirements/mariadb
+    volumes:
+      - mdb:/var/lib/mysql
+    ports:
+      - 3306:3306
+    env_file:
+      - .env
+    networks:
+      - inception
+    restart: unless-stopped
+
+  wordpress:
+    container_name: "wordpress"
+    build: ./requirements/wordpress
+
+    volumes:
+      - wp:/var/www/html
+    ports:
+      - 9000:9000
+    depends_on:
+      - mariadb
+    env_file:
+      - .env
+    networks:
+      - inception
+    restart: unless-stopped
+
+  nginx:
+    container_name: "nginx"
+    build: ./requirements/nginx
+    volumes:
+      - wp:/var/www/html
+    ports:
+      - 443:443
+    depends_on:
+      - wordpress
+    env_file:
+      - .env
+    networks:
+      - inception
+    restart: unless-stopped
+
+networks:
+  inception:
+    driver: bridge #Default network driver. Connects the linked containers so they can communicate together. Aslo isolate them from other containers, not ont hat network.
+
+volumes:
+  mdb:
+    driver: local 
+    driver_opts: #driver options
+      type: none
+      o: bind #mount option: bind mount est utilisé lorsque le docker est dépendant d'un répertoire de l'hôte, surtout utilisé s'il y a des fichiers de configuration. Pratique lorsque l'on doit modifier ou accéder un ou des fichiers
+      device: /home/anhebert/data/mysql
+  wp:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind #mount option
+      device: /home/anhebert/data/wordpress
+
+
