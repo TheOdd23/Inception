@@ -9,9 +9,9 @@ COPY conf/db-entrypoint.sh ./db-entrypoint.sh
 
 EXPOSE 3306
 
-RUN  mkdir -p /run/mysqld; 
-RUN  chown -R mysql:mysql /run/mysqld; 
-RUN  chown -R mysql:mysql /var/lib/mysql;
+RUN  mkdir -p /run/mysqld 
+RUN  chown -R mysql:mysql /run/mysqld 
+RUN  chown -R mysql:mysql /var/lib/mysql
 RUN  chmod +x ./db-entrypoint.sh
 
 ENTRYPOINT ["sh", "/db-entrypoint.sh"]
